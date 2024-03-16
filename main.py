@@ -126,7 +126,7 @@ def index():
             capacity = get_value()
             assert(capacity)
             day, hour, date = get_time_info()
-            new_row = {'date':date, 'day': day, 'hour': hour, 'capacity': capacity}
+            new_row = {'date':date, 'day': day, 'hour': hour+1, 'capacity': capacity}
             load_append_save("gym_capacity.csv", new_row)
         return jsonify(new_row)
     except:
