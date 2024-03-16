@@ -98,7 +98,7 @@ def index():
             assert(capacity)
             day, hour, date = get_time_info()
             new_row = {'date':date, 'day': day, 'hour': hour, 'capacity': capacity}
-            load_append_save("data.csv", new_row)
+            load_append_save("/data/gym_capacity.csv", new_row)
         return jsonify(new_row)
     except:
         return jsonify({"Call failed."})
