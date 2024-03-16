@@ -1,3 +1,4 @@
+import io
 from flask import Flask, jsonify
 import os
 import requests
@@ -68,16 +69,24 @@ def get_value():
         return None
 
 def load_append_save(csv_file, new_row):
-    try:
-        df = pd.read_csv(csv_file)
-    except FileNotFoundError:
-        print("CSV file not found. Creating a new DataFrame.")
-        df = pd.DataFrame(columns=['date', 'day', 'hour','capacity'])
-
+    file = get_webdav_file_content("gym_capacity.csv")
+    df = pd.read_csv(io.StringIO(file.decode('utf-8')))
     df.loc[len(df)] = new_row
-    df.to_csv(csv_file, index=False)
+    csv_string = df.to_csv(index=False)
+    csv_bytes = csv_string.encode('utf-8')
+    # Temporary file name
+    temp_file_name = csv_file
 
-    return df
+    # Construct headers with authentication
+    headers = {
+        'Content-Type': 'text/csv',
+    }
+    auth = (username, password)
+
+    # Write CSV bytes to a temporary file
+    with open(temp_file_name, 'wb') as temp_file:
+        temp_file.write(csv_bytes)
+    response = requests.put(webdav_url + temp_file_name, data=open(temp_file_name, 'rb'), headers=headers, auth=auth)
 
 def is_weekday(dt):
     # Monday is 0 and Sunday is 6
@@ -89,7 +98,27 @@ def is_gym_open():
         return time(7, 0) <= time(datetime.now().hour,datetime.now().minute) <= time(23, 30)
     else:
         return time(8, 30) <= time(datetime.now().hour,datetime.now().minute) <= time(19, 0) 
-        
+
+# Replace these variables with your own ownCloud server details
+owncloud_url = "https://owncloud.gwdg.de"
+username = os.getenv("WEBDAV_USERNAME")
+password = os.getenv("WEBDAV_PASS")
+subfolder = '/MyData/'
+# Set up the WebDAV URL for accessing files
+webdav_url = f"{owncloud_url}/remote.php/dav/files/{username}/{subfolder}"
+
+# Authenticate using HTTP Basic Auth
+auth = requests.auth.HTTPBasicAuth(username, password)
+
+# Example: Download a file from ownCloud
+def get_webdav_file_content(file_name):
+    response = requests.get(f"{webdav_url}{file_name}", auth=auth)
+    if response.status_code == 200:  # OK
+        return response.content
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+
+
 @app.route('/')
 def index():
     try:
@@ -98,7 +127,7 @@ def index():
             assert(capacity)
             day, hour, date = get_time_info()
             new_row = {'date':date, 'day': day, 'hour': hour, 'capacity': capacity}
-            load_append_save("/data/gym_capacity.csv", new_row)
+            load_append_save("gym_capacity.csv", new_row)
         return jsonify(new_row)
     except:
         return jsonify({"Call failed."})
