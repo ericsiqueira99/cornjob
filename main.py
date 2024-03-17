@@ -19,19 +19,8 @@ def get_time_info():
     # Get the day of the week (0=Monday, 1=Tuesday, ..., 6=Sunday)
     day_of_week = current_time.weekday()
 
-    # Round up the current minute to the nearest half-hour
-    rounded_minute = (current_time.minute + 15) // 15 * 15
-    if rounded_minute == 60:
-        rounded_minute = 0
-        current_time += timedelta(hours=1)
-
-    # Round the current time to the nearest quarter-hour
-    rounded_time = current_time.replace(minute=rounded_minute, second=0, microsecond=0)
-
     # Convert the rounded time to decimal representation
-    decimal_time = rounded_time.hour + rounded_time.minute / 60
-
-
+    decimal_time = current_time.hour + current_time.minute / 60
     # Get the name of the day of the week
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     day_name = days_of_week[day_of_week]
@@ -128,7 +117,9 @@ def index():
             day, hour, date = get_time_info()
             new_row = {'date':date, 'day': day, 'hour': hour+1, 'capacity': capacity}
             load_append_save("gym_capacity.csv", new_row)
-        return jsonify(new_row)
+            return jsonify(new_row)
+        else:
+            return jsonify({"Gym is closed."})
     except:
         return jsonify({"Call failed."})
 
