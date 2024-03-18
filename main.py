@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime, timedelta, time
 import pandas as pd
-
+import pytz
 
 app = Flask(__name__)
 
@@ -14,10 +14,16 @@ app = Flask(__name__)
 
 def get_time_info():
     # Get the current date and time
-    current_time = datetime.now()
+    frankfurt_timezone = pytz.timezone('Europe/Berlin')
+    current_time = datetime.now(frankfurt_timezone)
 
     # Get the day of the week (0=Monday, 1=Tuesday, ..., 6=Sunday)
     day_of_week = current_time.weekday()
+
+    # Round up the current minute to the nearest half-hour
+    quarter_hour = (current_time.minute + 7) // 15 * 15
+    # Set the rounded minutes and clear seconds
+    current_time = current_time.replace(minute=quarter_hour, second=0, microsecond=0)
 
     # Convert the rounded time to decimal representation
     decimal_time = current_time.hour + current_time.minute / 60
@@ -82,7 +88,8 @@ def is_weekday(dt):
     return dt.weekday() < 5
 
 def is_gym_open():
-    dt = datetime.now()
+    frankfurt_timezone = pytz.timezone('Europe/Berlin')
+    dt = datetime.now(frankfurt_timezone)
     if is_weekday(dt):
         return time(7, 0) <= time(datetime.now().hour,datetime.now().minute) <= time(23, 30)
     else:
