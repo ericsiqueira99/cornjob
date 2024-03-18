@@ -117,11 +117,11 @@ def index():
             day, hour, date = get_time_info()
             new_row = {'date':date, 'day': day, 'hour': hour+1, 'capacity': capacity}
             load_append_save("gym_capacity.csv", new_row)
-            return jsonify(new_row)
+            return jsonify(new_row), 200
         else:
-            return jsonify({"Gym is closed."})
-    except:
-        return jsonify({"Call failed."})
+            return jsonify({"Result":"Gym is closed."}), 200
+    except Exception as e:
+        return jsonify({"Error":"Unknown Eror"}), 428
 
 
 if __name__ == '__main__':
