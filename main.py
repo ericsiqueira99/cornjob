@@ -73,7 +73,7 @@ def load_append_save(csv_file, new_row):
     with open(temp_file_name, 'wb') as temp_file:
         temp_file.write(csv_bytes)
     response = requests.put(webdav_url + temp_file_name, data=open(temp_file_name, 'rb'), headers=headers, auth=auth)
-    return response.status_code == 201
+    return response.ok
 
 def is_weekday(dt):
     # Monday is 0 and Sunday is 6
@@ -117,6 +117,7 @@ def index():
             new_row = {'date':date, 'day': day, 'hour': hour, 'capacity': capacity}
             result = load_append_save("gym_capacity.csv", new_row)
             if result:
+                print("FILE UPDATED")
                 return jsonify(new_row), 200
             else:
                 return jsonify({"Error":"Unknown Eror"}), 428
