@@ -16,17 +16,8 @@ def get_time_info():
     # Get the current date and time
     frankfurt_timezone = pytz.timezone('Europe/Berlin')
     current_time = datetime.now(frankfurt_timezone)
-
     # Get the day of the week (0=Monday, 1=Tuesday, ..., 6=Sunday)
     day_of_week = current_time.weekday()
-
-    # Round up the current minute to the nearest half-hour
-    quarter_hour = (current_time.minute + 7) // 15 * 15
-    # Set the rounded minutes and clear seconds
-    current_time = current_time.replace(minute=quarter_hour, second=0, microsecond=0)
-
-    # Convert the rounded time to decimal representation
-    decimal_time = current_time.hour + current_time.minute / 60
     # Get the name of the day of the week
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     day_name = days_of_week[day_of_week]
@@ -36,7 +27,7 @@ def get_time_info():
     # Get the date from the timestamp
     date = timestamp.date()
 
-    return day_name, decimal_time, date
+    return day_name, current_time.strftime("%H:%M"), date
 
 def get_value():
     # URL of the webpage you want to retrieve
@@ -82,6 +73,7 @@ def load_append_save(csv_file, new_row):
     with open(temp_file_name, 'wb') as temp_file:
         temp_file.write(csv_bytes)
     response = requests.put(webdav_url + temp_file_name, data=open(temp_file_name, 'rb'), headers=headers, auth=auth)
+    return response.status_code == 200
 
 def is_weekday(dt):
     # Monday is 0 and Sunday is 6
@@ -122,11 +114,14 @@ def index():
             capacity = get_value()
             assert(capacity)
             day, hour, date = get_time_info()
-            new_row = {'date':date, 'day': day, 'hour': hour+1, 'capacity': capacity}
-            load_append_save("gym_capacity.csv", new_row)
-            return jsonify(new_row), 200
+            new_row = {'date':date, 'day': day, 'hour': hour, 'capacity': capacity}
+            result = load_append_save("gym_capacity.csv", new_row)
+            if result:
+                return jsonify(new_row), 200
+            else:
+                return jsonify({"Error":"Unknown Eror"}), 428
         else:
-            return jsonify({"Result":"Gym is closed."}), 200
+            return jsonify({"Result":"Gym is closed."}), 428
     except Exception as e:
         return jsonify({"Error":"Unknown Eror"}), 428
 
