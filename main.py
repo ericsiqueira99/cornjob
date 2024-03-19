@@ -73,7 +73,7 @@ def load_append_save(csv_file, new_row):
     with open(temp_file_name, 'wb') as temp_file:
         temp_file.write(csv_bytes)
     response = requests.put(webdav_url + temp_file_name, data=open(temp_file_name, 'rb'), headers=headers, auth=auth)
-    return response.status_code == 200
+    return response.status_code == 201
 
 def is_weekday(dt):
     # Monday is 0 and Sunday is 6
