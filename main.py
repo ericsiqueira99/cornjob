@@ -120,10 +120,13 @@ def index():
                 print("FILE UPDATED")
                 return jsonify(new_row), 200
             else:
+                print("ERROR WITH UPDATING FILE")
                 return jsonify({"Error":"Unknown Eror"}), 428
         else:
+            print("GYM IS CLOSED")
             return jsonify({"Result":"Gym is closed."}), 428
     except Exception as e:
+        print(f"ERROR: {e}")
         return jsonify({"Error":"Unknown Eror"}), 428
 
 
